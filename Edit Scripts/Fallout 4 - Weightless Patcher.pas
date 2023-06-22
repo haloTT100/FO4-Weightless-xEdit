@@ -137,11 +137,11 @@ function Initialize: Integer;
 				end;
 			end;
 			
-			if(bookPatch) then
+			if(armorPatch) then
 			begin
 				if(signature = 'ARMO') then
 				begin
-					originalWeight := genv(rec, 'DATA - /Weight');
+					originalWeight := genv(rec, 'DATA - DATA/Weight');
 					newWeight := 0;
 
 					if(originalWeight = newWeight) 
@@ -151,7 +151,7 @@ function Initialize: Integer;
 							end
 						else
 							begin
-							seev(rec, 'DATA - /Weight', newWeight);
+							seev(rec, 'DATA - DATA/Weight', newWeight);
 							end;
 				end;
 			end;
@@ -198,7 +198,7 @@ function Initialize: Integer;
 			begin
 				if(signature = 'KEYM') then 
 				begin
-					originalWeight := genv(rec, 'DATA - /Weight');
+					originalWeight := genv(rec, 'DATA - DATA/Weight');
 					newWeight := 0;
 
 					if(originalWeight = newWeight) 
@@ -208,7 +208,7 @@ function Initialize: Integer;
 							end
 						else
 							begin
-							seev(rec, 'DATA - /Weight', newWeight);
+							seev(rec, 'DATA - DATA/Weight', newWeight);
 							end;
 				end;
 			end;
@@ -217,7 +217,7 @@ function Initialize: Integer;
 			begin
 				if(signature = 'NOTE') then
 				begin
-					originalWeight := genv(rec, 'DATA - /Weight');
+					originalWeight := genv(rec, 'DATA - DATA/Weight');
 					newWeight := 0;
 
 					if(originalWeight = newWeight) 
@@ -227,7 +227,7 @@ function Initialize: Integer;
 							end
 						else
 							begin
-							seev(rec, 'DATA - /Weight', newWeight);
+							seev(rec, 'DATA - DATA/Weight', newWeight);
 							end;
 				end;
 			end;
