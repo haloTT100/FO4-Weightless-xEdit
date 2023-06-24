@@ -8,11 +8,11 @@ unit UserScript;
 uses 'lib\mxpf';
 
 var
-  i: Integer;
+  i, anim: Integer;
   signature: String;
   originalWeight, newWeight: Real;
   rec: IInterface;
-  alchPatch, ammoPatch, armorPatch, bookPatch, miscPatch, keymPatch, notePatch, weaponPatch: String;
+  alchPatch, ammoPatch, armorPatch, bookPatch, miscPatch, keymPatch, notePatch, weaponPatch, grenadePatch: String;
 	
 function Initialize: Integer;
 begin
@@ -27,6 +27,8 @@ begin
 	InputQuery('Do you want to make keys weightless?', 'Input true or false:', keymPatch);
 	InputQuery('Do you want to make notes weightless?', 'Input true or false:', notePatch);
 	InputQuery('Do you want to make weapons weightless?', 'Input true or false:', weaponPatch);
+	if(not StringToBool(weaponPatch)) then
+		InputQuery('Do you want to make grenades weightless?', 'Input true or false:', grenadePatch);
 	
 	PatchFileByName('WeightLess.esp');
 
@@ -78,6 +80,12 @@ begin
 		LoadRecords('WEAP');
 	end;
 	
+	if StringToBool(grenadePatch) then
+	begin
+		AddMessage('Loading GRENADE patch');
+		LoadRecords('WEAP');
+	end;
+	
 	CopyRecordsToPatch;
 	AddMessage('Beginning Patching');
 	
@@ -85,6 +93,7 @@ begin
 	begin
 		rec := GetPatchRecord(i);
 		signature := genv(rec, 'Record Header\Signature');
+		
 		try
 			if StringToBool(alchPatch) and (signature = 'ALCH') then
 			begin
@@ -92,8 +101,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - Weight', newWeight);
 					AddMessage('Patched ALCHEMY record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -104,8 +115,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - Data/Weight', newWeight);
 					AddMessage('Patched AMMO record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -116,8 +129,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - DATA/Weight', newWeight);
 					AddMessage('Patched ARMOR record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -128,8 +143,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - Data/Weight', newWeight);
 					AddMessage('Patched BOOK record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -140,8 +157,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - Data/Weight', newWeight);
 					AddMessage('Patched MISC record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -152,8 +171,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - DATA/Weight', newWeight);
 					AddMessage('Patched KEYM record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -164,8 +185,10 @@ begin
 				newWeight := 0;
 
 				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DATA - DATA/Weight', newWeight);
 					AddMessage('Patched NOTE record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
@@ -175,16 +198,36 @@ begin
 				originalWeight := genv(rec, 'DNAM - Data/Weight');
 				newWeight := 0;
 
-				if originalWeight <> newWeight then 
+				if originalWeight <> newWeight then
+				begin
 					seev(rec, 'DNAM - Data/Weight', newWeight);
 					AddMessage('Patched WEAPON record: ' + genv(rec, 'EDID - Editor ID'));
+				end
 				else
 					removeNode(rec);
 			end;
 			
+			if StringToBool(grenadePatch) and (signature = 'WEAP') then
+			begin
+				anim := genv(rec, 'DNAM - Data/Animation Type');
+				if (anim = 10) or (anim = 11) then
+				begin
+					originalWeight := genv(rec, 'DNAM - Data/Weight');
+					newWeight := 0;
+
+					if originalWeight <> newWeight then
+					begin
+						seev(rec, 'DNAM - Data/Weight', newWeight);
+						AddMessage('Patched GRENADE record: ' + genv(rec, 'EDID - Editor ID'));
+					end
+					else
+						removeNode(rec);
+				end;
+			end;
+			
 		except
-			AddMessage('Failed to patch record');
-			continue;
+			on E: Exception do
+			AddMessage('Error patching record: ' + genv(rec, 'EDID - Editor ID') + '. ' + E.Message);
 		end;
 	end;
   
