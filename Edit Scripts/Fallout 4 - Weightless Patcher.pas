@@ -8,11 +8,12 @@ unit UserScript;
 uses 'lib\mxpf';
 
 var
-  i, anim: Integer;
+  i: Integer;
   signature: String;
   originalWeight, newWeight: Real;
   rec: IInterface;
   alchPatch, ammoPatch, armorPatch, bookPatch, miscPatch, keymPatch, notePatch, weaponPatch, grenadePatch: String;
+
 	
 function Initialize: Integer;
 begin
@@ -84,6 +85,25 @@ begin
 	begin
 		AddMessage('Loading GRENADE patch');
 		LoadRecords('WEAP');
+	end;
+	
+	for i := MaxRecordIndex downto 0 do
+	begin
+		rec := GetRecord(i);
+		signature := genv(rec, 'Record Header\Signature');
+		if StringToBool(grenadePatch) and (signature = 'WEAP') then
+		begin
+			rec := GetRecord(i);
+			if HasKeyword(rec, 'WeaponTypeGrenade') or HasKeyword(rec, 'WeaponTypeMine') then
+			begin
+				AddMessage('Found greande/mine WEAPON record: ' + genv(rec, 'EDID - Editor ID'));
+			end
+			else
+			begin
+				RemoveRecord(i);
+				AddMessage('Removed non greande/mine WEAPON record: ' + genv(rec, 'EDID - Editor ID'));
+			end;
+		end;
 	end;
 	
 	CopyRecordsToPatch;
@@ -205,12 +225,10 @@ begin
 				end
 				else
 					removeNode(rec);
-			end;
-			
-			if StringToBool(grenadePatch) and (signature = 'WEAP') then
+			end
+			else if StringToBool(grenadePatch) then
 			begin
-				anim := genv(rec, 'DNAM - Data/Animation Type');
-				if (anim = 10) or (anim = 11) then
+				if HasKeyword(rec, 'WeaponTypeGrenade') or HasKeyword(rec, 'WeaponTypeMine') then
 				begin
 					originalWeight := genv(rec, 'DNAM - Data/Weight');
 					newWeight := 0;
@@ -224,6 +242,8 @@ begin
 						removeNode(rec);
 				end;
 			end;
+			
+
 			
 		except
 			on E: Exception do
