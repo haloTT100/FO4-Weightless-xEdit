@@ -8,11 +8,11 @@ unit UserScript;
 uses 'lib\mxpf';
 
 var
-  i: Integer;
+  i, anim: Integer;
   signature: String;
   originalWeight, newWeight: Real;
   rec: IInterface;
-  alchPatch, ammoPatch, armorPatch, bookPatch, miscPatch, keymPatch, notePatch, weaponPatch, grenadePatch: String;
+  alchPatch, ammoPatch, armorPatch, bookPatch, miscPatch, keymPatch, notePatch, weaponPatch, grenadePatch: Boolean;
 
 	
 function Initialize: Integer;
@@ -20,81 +20,92 @@ begin
 	DefaultOptionsMXPF;
 	InitializeMXPF;
 	
-	InputQuery('Do you want to make foods/ingredients weightless?', 'Input true or false:', alchPatch);
-	InputQuery('Do you want to make ammunitions weightless?', 'Input true or false:', ammoPatch);
-	InputQuery('Do you want to make armors weightless?', 'Input true or false:', armorPatch);
-	InputQuery('Do you want to make books weightless?', 'Input true or false:', bookPatch);
-	InputQuery('Do you want to make miscellaneous items weightless?', 'Input true or false:', miscPatch);
-	InputQuery('Do you want to make keys weightless?', 'Input true or false:', keymPatch);
-	InputQuery('Do you want to make notes weightless?', 'Input true or false:', notePatch);
-	InputQuery('Do you want to make weapons weightless?', 'Input true or false:', weaponPatch);
-	if(not StringToBool(weaponPatch)) then
-		InputQuery('Do you want to make grenades weightless?', 'Input true or false:', grenadePatch);
+	alchPatch := StringToBool(InputBox('Do you want to make foods/ingredients weightless?', 'Input true or false:','')) = True;
+	ammoPatch := StringToBool(InputBox('Do you want to make ammunitions weightless?', 'Input true or false:','')) = True;
+	armorPatch := StringToBool(InputBox('Do you want to make armors weightless?', 'Input true or false:','')) = True;
+	bookPatch := StringToBool(InputBox('Do you want to make books weightless?', 'Input true or false:','')) = True;
+	miscPatch := StringToBool(InputBox('Do you want to make miscellaneous items weightless?', 'Input true or false:','')) = True;
+	keymPatch := StringToBool(InputBox('Do you want to make keys weightless?', 'Input true or false:','')) = True;
+	notePatch := StringToBool(InputBox('Do you want to make notes weightless?', 'Input true or false:','')) = True;
+	weaponPatch := StringToBool(InputBox('Do you want to make weapons weightless?', 'Input true or false:','')) = True;
+	if (not weaponPatch) then
+		grenadePatch := StringToBool(InputBox('Do you want to make grenades weightless?', 'Input true or false:','')) = True;
 	
 	PatchFileByName('WeightLess.esp');
 
-	if StringToBool(alchPatch) then
+	if alchPatch then
 	begin
 		AddMessage('Loading ALCHEMY patch');
 		LoadRecords('ALCH');
 	end;
 
-	if StringToBool(ammoPatch) then
+	if ammoPatch then
 	begin
 		AddMessage('Loading AMMO patch');
 		LoadRecords('AMMO');
 	end;
 
-	if StringToBool(armorPatch) then
+	if armorPatch then
 	begin
 		AddMessage('Loading ARMOR patch');
 		LoadRecords('ARMO');
 	end;
 
-	if StringToBool(bookPatch) then
+	if bookPatch then
 	begin
 		AddMessage('Loading BOOK patch');
 		LoadRecords('BOOK');
 	end;
 
-	if StringToBool(miscPatch) then
+	if miscPatch then
 	begin
 		AddMessage('Loading MISC patch');
 		LoadRecords('MISC');
 	end;
 
-	if StringToBool(keymPatch) then
+	if keymPatch then
 	begin
 		AddMessage('Loading KEYM patch');
 		LoadRecords('KEYM');
 	end;
 
-	if StringToBool(notePatch) then
+	if notePatch then
 	begin
 		AddMessage('Loading NOTE patch');
 		LoadRecords('NOTE');
 	end;
 
-	if StringToBool(weaponPatch) then
+	if weaponPatch then
 	begin
 		AddMessage('Loading WEAPON patch');
 		LoadRecords('WEAP');
-	end;
-	
-	if StringToBool(grenadePatch) then
+	end
+	else if grenadePatch then
 	begin
-		AddMessage('Loading GRENADE patch');
-		LoadRecords('WEAP');
+	AddMessage('Loading GRENADE patch');
+	LoadRecords('WEAP');
 	end;
 	
-	for i := MaxRecordIndex downto 0 do
+	for i := MaxRecordIndex downto 0 do //Remove WEAPON records if grenadePatch is true
 	begin
 		rec := GetRecord(i);
 		signature := genv(rec, 'Record Header\Signature');
-		if StringToBool(grenadePatch) and (signature = 'WEAP') then
+		
+		if grenadePatch and (signature = 'WEAP') then
 		begin
 			rec := GetRecord(i);
-			if HasKeyword(rec, 'WeaponTypeGrenade') or HasKeyword(rec, 'WeaponTypeMine') then
+			anim := IntToStr(genv(rec, 'DNAM - Data/Animation Type'));
+			if (HasKeyword(rec, 'WeaponTypeGrenade')
+			or HasKeyword(rec, 'WeaponTypeMine')
+			or HasKeyword(rec, 'WeaponTypePlasmaGrenade')
+			or HasKeyword(rec, 'WeaponTypeNukaGrenade')
+			or HasKeyword(rec, 'WeaponTypeCryoGrenade')
+			or HasKeyword(rec, 'WeaponTypePulseGrenade')
+			or HasKeyword(rec, 'WeaponTypeBottlecapMine')
+			or HasKeyword(rec, 'WeaponTypeNukaMine')
+			or HasKeyword(rec, 'WeaponTypePlasmaMine')
+			or HasKeyword(rec, 'WeaponTypePulseMine')
+			or HasKeyword(rec, 'WeaponTypeCryoMine')) and ((anim = 10) or (anim = 11)) then
 			begin
 				AddMessage('Found greande/mine WEAPON record: ' + genv(rec, 'EDID - Editor ID'));
 			end
@@ -115,7 +126,7 @@ begin
 		signature := genv(rec, 'Record Header\Signature');
 		
 		try
-			if StringToBool(alchPatch) and (signature = 'ALCH') then
+			if alchPatch and (signature = 'ALCH') then
 			begin
 				originalWeight := genv(rec, 'DATA - Weight');
 				newWeight := 0;
@@ -129,7 +140,7 @@ begin
 					removeNode(rec);
 			end;
 
-			if StringToBool(ammoPatch) and (signature = 'AMMO') then
+			if ammoPatch and (signature = 'AMMO') then
 			begin
 				originalWeight := genv(rec, 'DATA - Data/Weight');
 				newWeight := 0;
@@ -143,7 +154,7 @@ begin
 					removeNode(rec);
 			end;
 			
-			if StringToBool(armorPatch) and (signature = 'ARMO') then
+			if armorPatch and (signature = 'ARMO') then
 			begin
 				originalWeight := genv(rec, 'DATA - DATA/Weight');
 				newWeight := 0;
@@ -157,7 +168,7 @@ begin
 					removeNode(rec);
 			end;
 
-			if StringToBool(bookPatch) and (signature = 'BOOK') then
+			if bookPatch and (signature = 'BOOK') then
 			begin
 				originalWeight := genv(rec, 'DATA - Data/Weight');
 				newWeight := 0;
@@ -171,7 +182,7 @@ begin
 					removeNode(rec);
 			end;
 
-			if StringToBool(miscPatch) and (signature = 'MISC') then
+			if miscPatch and (signature = 'MISC') then
 			begin
 				originalWeight := genv(rec, 'DATA - Data/Weight');
 				newWeight := 0;
@@ -185,7 +196,7 @@ begin
 					removeNode(rec);
 			end;
 
-			if StringToBool(keymPatch) and (signature = 'KEYM') then
+			if keymPatch and (signature = 'KEYM') then
 			begin
 				originalWeight := genv(rec, 'DATA - DATA/Weight');
 				newWeight := 0;
@@ -199,7 +210,7 @@ begin
 					removeNode(rec);
 			end;
 			
-			if StringToBool(notePatch) and (signature = 'NOTE') then
+			if notePatch and (signature = 'NOTE') then
 			begin
 				originalWeight := genv(rec, 'DATA - DATA/Weight');
 				newWeight := 0;
@@ -213,7 +224,7 @@ begin
 					removeNode(rec);
 			end;
 			
-			if StringToBool(weaponPatch) and (signature = 'WEAP') then
+			if ((weaponPatch or grenadePatch) and (signature = 'WEAP')) then
 			begin
 				originalWeight := genv(rec, 'DNAM - Data/Weight');
 				newWeight := 0;
@@ -221,43 +232,30 @@ begin
 				if originalWeight <> newWeight then
 				begin
 					seev(rec, 'DNAM - Data/Weight', newWeight);
-					AddMessage('Patched WEAPON record: ' + genv(rec, 'EDID - Editor ID'));
-				end
-				else
-					removeNode(rec);
-			end
-			else if StringToBool(grenadePatch) then
-			begin
-				if HasKeyword(rec, 'WeaponTypeGrenade') or HasKeyword(rec, 'WeaponTypeMine') then
-				begin
-					originalWeight := genv(rec, 'DNAM - Data/Weight');
-					newWeight := 0;
-
-					if originalWeight <> newWeight then
+					if(grenadePatch) then
 					begin
-						seev(rec, 'DNAM - Data/Weight', newWeight);
 						AddMessage('Patched GRENADE record: ' + genv(rec, 'EDID - Editor ID'));
 					end
 					else
-						removeNode(rec);
-				end;
+						AddMessage('Patched WEAPON record: ' + genv(rec, 'EDID - Editor ID'));
+				end
+				else
+					removeNode(rec);
 			end;
-			
-
 			
 		except
 			on E: Exception do
 			AddMessage('Error patching record: ' + genv(rec, 'EDID - Editor ID') + '. ' + E.Message);
 		end;
 	end;
-  
+	
   PrintMXPFReport;
   FinalizeMXPF;
 end;
 
 function StringToBool(s: string): Boolean;
 begin
-  s := LowerCase(s);
-  Result := (s = 'true');
+	Result := (LowerCase(s) = 'true');
 end;
+
 end.
